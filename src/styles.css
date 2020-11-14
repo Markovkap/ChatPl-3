@@ -1,0 +1,38 @@
+.App {
+  font-family: sans-serif;
+  text-align: center;
+}
+.center {
+  width: 50%; /* Ширина слоя */
+  padding: 10px; /* Поля вокруг текста */
+  margin: auto; /* Выравниваем по центру */
+  background: rgb(92, 92, 92); /* Цвет фона */
+}
+body {
+  background: url("https://скачать-мессенджер.рф/wp-content/uploads/2018/07/fon-dlya-vatsap-3.jpg");
+}
+select {
+  background-color: rgb(143, 70, 139);
+}
+button {
+  background-color: rgba(151, 190, 161, 0.74);
+}
+.chat {
+  background-color: rgb(202, 129, 129);
+}
+input {
+  background-color: rgb(206, 181, 98);
+}
+textarea {
+  background-color: rgb(145, 141, 95);
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  margin-bottom: 10px;
+  min-height: 50px;
+  resize: vertical;
+}
+.error {
+  color: red;
+}

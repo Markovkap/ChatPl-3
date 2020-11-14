@@ -1,0 +1,35 @@
+{
+  "en": {
+    "nickPlaceholder": "Nickname",
+    "header": "Chat of 'PL-3' group",
+    "desc": "The machine is controlled from the arrows on the keyboard",
+    "submitButton": "send",
+    "messagePlaceholder": "Text",
+    "passwordPlaceholder": "Password",
+    "logInButton": "Enter",
+    "welcome": "Welcome",
+    "logInError": "Вы ввели не правельный пароль или вы не зарегестрированы на этом сайте, если хотите зарегестрироватся отправте сообщение на мою почту - terentismark2007@gmail.com"
+  },
+  "ru": {
+    "nickPlaceholder": "Никнейм",
+    "header": "Чат 'ПЛ-3'",
+    "desc": "Машинка управляется со стрелочек на клавиатуре",
+    "submitButton": "Отправить",
+    "messagePlaceholder": "Текст",
+    "passwordPlaceholder": "Пароль",
+    "logInButton": "Зайти",
+    "welcome": "Приветствуем",
+    "logInError": "Вы ввели не правельный пароль или вы не зарегестрированы на этом сайте, если хотите зарегестрироватся отправте сообщение на мою почту - terentismark2007@gmail.com"
+  },
+  "ua": {
+    "nickPlaceholder": "Нікнейм",
+    "header": "Чат 'ПЛ-3'",
+    "desc": "Машинка управляється зі стрілок на клавіатурі",
+    "submitButton": "Надіслати",
+    "messagePlaceholder": "Текст",
+    "passwordPlaceholder": "Пароль",
+    "logInButton": "Увійти",
+    "welcome": "Вітаємо",
+    "logInError": "Вы ввели не правельный пароль или вы не зарегестрированы на этом сайте, если хотите зарегестрироватся отправте сообщение на мою почту - terentismark2007@gmail.com"
+  }
+}
