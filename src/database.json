@@ -1,6 +1,6 @@
 {
   "chat": [
-    { "id": 0, "name": "Mark", "message": "Hello" },
+    { "id": 0, "name": "anonim", "message": "Hello" },
     { "id": 1, "name": "Muhamed", "message": "Goodbye" },
     { "id": 2, "name": "Alibaba", "message": "Hi" }
   ]

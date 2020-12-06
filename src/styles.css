@@ -36,3 +36,11 @@ textarea {
 .error {
   color: red;
 }
+.top-panel {
+  display: flexbox;
+  justify-content: space-between;
+  flex-direction: space-between;
+}
+p {
+  word-break: break-all;
+}

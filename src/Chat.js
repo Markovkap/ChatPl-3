@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./styles.css";
 import * as translations from "./translations.json";
@@ -6,7 +6,7 @@ import * as db from "./database.json";
 
 const API = axios.create({
   baseURL: "https://665gz.sse.codesandbox.io/v1/",
-  timeout: 3000
+  timeout: 10000
 });
 
 // const urlRegexp = /(([a-z]+:\/\/)?(([a-z0-9\-]+\.)+([a-z]{2}|aero|arpa|biz|com|coop|edu|gov|info|int|jobs|mil|museum|name|nato|net|org|pro|travel|local|internal))(:[0-9]{1,5})?(\/[a-z0-9_\-\.~]+)*(\/([a-z0-9_\-\.]*)(\?[a-z0-9+_\-\.%=&amp;]*)?)?(#[a-zA-Z0-9!$&'()*+.=-_~:@/?]*)?)(\s+|$)/gi.replace(
@@ -23,6 +23,15 @@ export default function Chat(props) {
   const [isLogged, setIsLogged] = useState(false);
   const [user, setUser] = useState(null);
   const [isError, setIsError] = useState(false);
+  const [isNeedToClear, setIsNeedToClear] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+
+  useEffect(() => {
+    if (isNeedToClear) {
+      clearMessage();
+    }
+  }, [isNeedToClear]);
 
   const sendMessage = (event) => {
     event.preventDefault();
@@ -37,11 +46,13 @@ export default function Chat(props) {
       name: user,
       message
     });
-    setChat(chatCopy); //здесь нужно очищать сообщения!!!!!!!!!!!!!
+    setChat(chatCopy);
+    setIsNeedToClear(true);
   };
 
   const clearMessage = () => {
     setMessage("");
+    setIsNeedToClear(false);
   };
 
   const checkLogIn = () => {
@@ -59,6 +70,7 @@ export default function Chat(props) {
           setIsLogged(true);
           setUser(response.data.user.username);
           setPassword("");
+          setIsAdmin(response.data.user.isAdmin);
         } else {
           setIsError(true);
         }
@@ -94,13 +106,27 @@ export default function Chat(props) {
     setUsername(event.target.value);
   };
 
+  const addUserForm = (event) => {
+    setIsSignUp(true);
+  };
+
   return (
     <div className="center">
-      <SelectLanguage lang={lang} onChange={changeLanguage} />
-      {isLogged && <LogOutButton lang={lang} onClick={logout} />}
+      <div className="top-panel">
+        <div className="top-panel-left">
+          <SelectLanguage lang={lang} onChange={changeLanguage} />
+          {isLogged && <LogOutButton lang={lang} onClick={logout} />}
+        </div>
+        <div className="top-panel-right">
+          {isLogged && isAdmin && (
+            <CreatUserButton lang={lang} onClick={addUserForm} />
+          )}
+        </div>
+      </div>
       <h1>{translations[lang].header}</h1>
       {isLogged ? (
         <ChatBlock
+          userNickname={username}
           lang={lang}
           onSubmit={sendMessage}
           onChange={changeMessage}
@@ -117,6 +143,13 @@ export default function Chat(props) {
           changeUsername={changeUsername}
           changePassword={changePassword}
           error={isError}
+        />
+      )}
+      {isSignUp && (
+        <AddUser
+          setIsSignUp={setIsSignUp}
+          lang={lang}
+          createUser={createUser}
         />
       )}
     </div>
@@ -164,7 +197,12 @@ function ChatBlock(props) {
       </form>
       <div className="chat">
         {props.chatHistory.map((item) => (
-          <Message key={item.id} name={item.name} message={item.message} />
+          <Message
+            key={item.id}
+            name={item.name}
+            username={props.userNickname}
+            message={item.message}
+          />
         ))}
       </div>
     </div>
@@ -179,6 +217,14 @@ function LogOutButton(props) {
   );
 }
 
+function CreatUserButton(props) {
+  return (
+    <button onClick={() => props.onClick()}>
+      {translations[props.lang].signUp}
+    </button>
+  );
+}
+
 function SelectLanguage(props) {
   return (
     <select onChange={(event) => props.onChange(event)} value={props.lang}>
@@ -189,10 +235,74 @@ function SelectLanguage(props) {
   );
 }
 
+function createUser(event, setIsSignUp) {
+  event.preventDefault(event);
+
+  const fields = event.target.querySelectorAll("input");
+  const button = event.target.querySelector("button");
+  const data = {};
+
+  for (const input of fields) {
+    let value = input.value;
+    if (input.type === "checkbox") {
+      value = input.checked;
+    }
+    data[input.name] = value;
+  }
+
+  button.disabled = true;
+
+  API.post("signup", data)
+    .then((response) => {
+      button.disabled = false;
+      if (response.data.success) {
+        alert("User created");
+      } else {
+        alert("User doesn't created");
+      }
+      setIsSignUp(false);
+    })
+    .catch((error) => {
+      button.disabled = true;
+      console.log(error);
+    });
+}
+
+function AddUser(props) {
+  return (
+    <form onSubmit={(event) => props.createUser(event, props.setIsSignUp)}>
+      <div>
+        <input
+          placeholder={translations[props.lang].nickPlaceholder}
+          name="username"
+          type="text"
+        />
+      </div>
+      <div>
+        <input
+          placeholder={translations[props.lang].passwordPlaceholder}
+          name="password"
+          type="text"
+        />
+      </div>
+      <div>
+        <label>
+          {" "}
+          <input name="isAdmin" type="checkbox" />
+          Admin
+        </label>
+      </div>
+      <div>
+        <button type="submit">create</button>
+      </div>
+    </form>
+  );
+}
+
 function Message(props) {
   return (
     <p>
-      {props.name}: {props.message}
+      {props.username === props.name ? "you" : props.name}: {props.message}
     </p>
   );
 }
