@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./styles.css";
 import * as translations from "./translations.json";
-import * as db from "./database.json";
+// import * as db from "./database.json";
 
 const API = axios.create({
   baseURL: "https://665gz.sse.codesandbox.io/v1/",
@@ -19,13 +19,15 @@ export default function Chat(props) {
   const [message, setMessage] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
-  const [chat, setChat] = useState(db.chat);
+  const [chat, setChat] = useState(null);
   const [isLogged, setIsLogged] = useState(false);
   const [user, setUser] = useState(null);
   const [isError, setIsError] = useState(false);
   const [isNeedToClear, setIsNeedToClear] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [token, setToken] = useState(null);
+  const [chatId, setChatId] = useState(null);
 
   useEffect(() => {
     if (isNeedToClear) {
@@ -40,14 +42,47 @@ export default function Chat(props) {
       return;
     }
 
-    let chatCopy = chat.slice();
-    chatCopy.unshift({
-      id: Date.now(),
-      name: user,
-      message
-    });
-    setChat(chatCopy);
-    setIsNeedToClear(true);
+    API.post(
+      "chats/" + chatId,
+      { data: { content: message } },
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    )
+      .then((response) => {
+        if (response.data.success) {
+          getAndSetMessages(chatId, token, (response) => {
+            setChat(transformMessages(response.data.chat.messages));
+            setIsNeedToClear(true);
+          });
+        } else {
+          setIsError(true);
+        }
+      })
+      .catch((error) => console.log(error));
+  };
+
+  const transformMessages = (messages) =>
+    messages
+      .map((message) => ({
+        id: message._id,
+        name: message.sender.username,
+        message: message.content
+      }))
+      .reverse();
+
+  const getAndSetMessages = (chatId, token, callback, args = []) => {
+    API.get("chats/" + chatId, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then((response) => {
+        if (response.data.success) {
+          callback(response, ...args);
+        } else {
+          setIsError(true);
+        }
+      })
+      .catch((error) => console.log(error));
   };
 
   const clearMessage = () => {
@@ -60,17 +95,32 @@ export default function Chat(props) {
       setIsError(true);
       return;
     }
+
     API.post("login", {
       username,
       password
     })
       .then((response) => {
         if (response.data.success) {
-          setIsError(false);
-          setIsLogged(true);
-          setUser(response.data.user.username);
-          setPassword("");
-          setIsAdmin(response.data.user.isAdmin);
+          const isAdmin = response.data.user.isAdmin;
+          const username = response.data.user.username;
+          console.log(response.data);
+          setToken(response.data.token);
+          setChatId(response.data.user.chats[0]._id);
+
+          getAndSetMessages(
+            response.data.user.chats[0]._id,
+            response.data.token,
+            (response, username, isAdmin) => {
+              setIsError(false);
+              setIsLogged(true);
+              setUser(username);
+              setPassword("");
+              setIsAdmin(isAdmin);
+              setChat(transformMessages(response.data.chat.messages));
+            },
+            [username, isAdmin]
+          );
         } else {
           setIsError(true);
         }
@@ -83,6 +133,8 @@ export default function Chat(props) {
       .then((response) => {
         if (response.data.success) {
           setIsLogged(false);
+          setChat(null);
+          setToken(null);
         } else {
           setIsError(true);
         }
@@ -119,12 +171,21 @@ export default function Chat(props) {
         </div>
         <div className="top-panel-right">
           {isLogged && isAdmin && (
-            <CreatUserButton lang={lang} onClick={addUserForm} />
+            <CreateUserButton lang={lang} onClick={addUserForm} />
           )}
         </div>
       </div>
       <h1>{translations[lang].header}</h1>
-      {isLogged ? (
+      <div>
+        {isSignUp && (
+          <AddUser
+            setIsSignUp={setIsSignUp}
+            lang={lang}
+            createUser={createUser}
+          />
+        )}
+      </div>
+      {isLogged && chat !== null ? (
         <ChatBlock
           userNickname={username}
           lang={lang}
@@ -143,13 +204,6 @@ export default function Chat(props) {
           changeUsername={changeUsername}
           changePassword={changePassword}
           error={isError}
-        />
-      )}
-      {isSignUp && (
-        <AddUser
-          setIsSignUp={setIsSignUp}
-          lang={lang}
-          createUser={createUser}
         />
       )}
     </div>
@@ -217,7 +271,7 @@ function LogOutButton(props) {
   );
 }
 
-function CreatUserButton(props) {
+function CreateUserButton(props) {
   return (
     <button onClick={() => props.onClick()}>
       {translations[props.lang].signUp}
@@ -256,6 +310,7 @@ function createUser(event, setIsSignUp) {
     .then((response) => {
       button.disabled = false;
       if (response.data.success) {
+        //добавить возможность добавления определеного юзера в текущий чат
         alert("User created");
       } else {
         alert("User doesn't created");
@@ -270,32 +325,37 @@ function createUser(event, setIsSignUp) {
 
 function AddUser(props) {
   return (
-    <form onSubmit={(event) => props.createUser(event, props.setIsSignUp)}>
-      <div>
-        <input
-          placeholder={translations[props.lang].nickPlaceholder}
-          name="username"
-          type="text"
-        />
-      </div>
-      <div>
-        <input
-          placeholder={translations[props.lang].passwordPlaceholder}
-          name="password"
-          type="text"
-        />
-      </div>
-      <div>
-        <label>
-          {" "}
-          <input name="isAdmin" type="checkbox" />
-          Admin
-        </label>
-      </div>
-      <div>
-        <button type="submit">create</button>
-      </div>
-    </form>
+    <>
+      <hr />
+      <h2>AddUser</h2>
+      <form onSubmit={(event) => props.createUser(event, props.setIsSignUp)}>
+        <div>
+          <input
+            placeholder={translations[props.lang].nickPlaceholder}
+            name="username"
+            type="text"
+          />
+        </div>
+        <div>
+          <input
+            placeholder={translations[props.lang].passwordPlaceholder}
+            name="password"
+            type="text"
+          />
+        </div>
+        <div>
+          <label>
+            {" "}
+            <input name="isAdmin" type="checkbox" />
+            Admin
+          </label>
+        </div>
+        <div>
+          <button type="submit">create</button>
+        </div>
+      </form>
+      <hr />
+    </>
   );
 }
 
