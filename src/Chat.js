@@ -28,6 +28,7 @@ export default function Chat(props) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [token, setToken] = useState(null);
   const [chatId, setChatId] = useState(null);
+  const [isLockButtons, setIsLockButtons] = useState(false);
 
   useEffect(() => {
     if (isNeedToClear) {
@@ -41,6 +42,8 @@ export default function Chat(props) {
     if (message.trim() === "") {
       return;
     }
+
+    setIsLockButtons(true);
 
     API.post(
       "chats/" + chatId,
@@ -58,8 +61,13 @@ export default function Chat(props) {
         } else {
           setIsError(true);
         }
+
+        setIsLockButtons(false);
       })
-      .catch((error) => console.log(error));
+      .catch((error) => {
+        console.log(error);
+        setIsLockButtons(false);
+      });
   };
 
   const transformMessages = (messages) =>
@@ -95,6 +103,8 @@ export default function Chat(props) {
       setIsError(true);
       return;
     }
+
+    setIsLockButtons(true);
 
     API.post("login", {
       username,
@@ -134,13 +144,22 @@ export default function Chat(props) {
               } else {
                 setIsError(true);
               }
+
+              setIsLockButtons(false);
             })
-            .catch((error) => console.log(error));
+            .catch((error) => {
+              console.log(error);
+              setIsLockButtons(false);
+            });
         } else {
           setIsError(true);
+          setIsLockButtons(false);
         }
       })
-      .catch((error) => console.log(error));
+      .catch((error) => {
+        console.log(error);
+        setIsLockButtons(false);
+      });
   };
 
   const logout = () => {
@@ -210,6 +229,7 @@ export default function Chat(props) {
           chatHistory={chat}
           message={message}
           username={user}
+          disabled={isLockButtons}
         />
       ) : (
         <LoginBlock
@@ -220,6 +240,7 @@ export default function Chat(props) {
           changeUsername={changeUsername}
           changePassword={changePassword}
           error={isError}
+          disabled={isLockButtons}
         />
       )}
     </div>
@@ -241,7 +262,7 @@ function LoginBlock(props) {
         onChange={(event) => props.changePassword(event)}
         placeholder={translations[props.lang].passwordPlaceholder}
       ></input>
-      <button onClick={() => props.onSubmit()}>
+      <button disabled={props.disabled} onClick={() => props.onSubmit()}>
         {translations[props.lang].logInButton}
       </button>
       {props.error && (
@@ -263,7 +284,9 @@ function ChatBlock(props) {
           onChange={(event) => props.onChange(event)}
           placeholder={translations[props.lang].messagePlaceholder}
         ></textarea>
-        <button type="submit">{translations[props.lang].submitButton}</button>
+        <button disabled={props.disabled} type="submit">
+          {translations[props.lang].submitButton}
+        </button>
       </form>
       <div className="chat">
         {props.chatHistory.map((item) => (
