@@ -197,6 +197,7 @@ export default function Chat(props) {
             setIsSignUp={setIsSignUp}
             lang={lang}
             createUser={createUser}
+            chatId={chatId}
           />
         )}
       </div>
@@ -305,7 +306,7 @@ function SelectLanguage(props) {
   );
 }
 
-function createUser(event, setIsSignUp) {
+function createUser(event, chatId, setIsSignUp) {
   event.preventDefault(event);
 
   const fields = event.target.querySelectorAll("input");
@@ -326,8 +327,16 @@ function createUser(event, setIsSignUp) {
     .then((response) => {
       button.disabled = false;
       if (response.data.success) {
-        //добавить возможность добавления определеного юзера в текущий чат
-        alert("User created");
+        //сделать переводы для всех текстов которые показываются на сайте
+        API.get(`chats/${chatId}/join/${response.data.user._id}`)
+          .then((response) => {
+            if (response.data.success) {
+              alert("User created and added to chat");
+            } else {
+              alert("User doesn't added to chat, but he is created");
+            }
+          })
+          .catch((error) => console.log(error));
       } else {
         alert("User doesn't created");
       }
@@ -344,7 +353,11 @@ function AddUser(props) {
     <>
       <hr />
       <h2>{translations[props.lang].adduser}</h2>
-      <form onSubmit={(event) => props.createUser(event, props.setIsSignUp)}>
+      <form
+        onSubmit={(event) =>
+          props.createUser(event, props.chatId, props.setIsSignUp)
+        }
+      >
         <div>
           <input
             placeholder={translations[props.lang].nickPlaceholder}
@@ -385,186 +398,3 @@ function Message(props) {
     </p>
   );
 }
-
-// export default class Chat extends React.Component {
-//   constructor(props) {
-//     super(props);
-//     this.state = {
-//       lang: "ru",
-//       message: "",
-//       password: "",
-//       nick: "",
-//       chat: [],
-//       logIn: false,
-//       user: null,
-//       error: false
-//     };
-//   }
-//   sendMassage(event) {
-//     event.preventDefault();
-
-//     if (this.state.message.trim() === "") {
-//       return;
-//     }
-//     let chat = this.state.chat.slice();
-//     chat.unshift({
-//       id: Date.now(),
-//       name: this.state.user,
-//       message: this.state.message
-//     });
-//     this.setState(
-//       {
-//         chat
-//       },
-//       () => this.clearMessage()
-//     );
-//   }
-
-//   componentDidMount() {
-//     this.setState({
-//       chat: db.chat
-//     });
-//   }
-
-//   checkLogIn() {
-//     if (this.state.nick.trim() === "" || this.state.password.trim() === "") {
-//       this.setState({
-//         error: true
-//       });
-//       return;
-//     }
-//     API.post("login", {
-//       username: this.state.nick,
-//       password: this.state.password
-//     })
-//       .then((response) => {
-//         if (response.data.success) {
-//           this.setState({
-//             error: false,
-//             logIn: true,
-//             user: response.data.user.username,
-//             password: ""
-//           });
-//         } else {
-//           this.setState({
-//             error: true
-//           });
-//         }
-//       })
-//       .catch((error) => console.log(error));
-//   }
-//   logout() {
-//     API.get("logout")
-//       .then((response) => {
-//         if (response.data.success) {
-//           this.setState({
-//             logIn: false
-//           });
-//         } else {
-//           this.setState({
-//             error: true
-//           });
-//         }
-//       })
-//       .catch((error) => console.log(error));
-//   }
-//   clearMessage() {
-//     this.setState({
-//       message: ""
-//     });
-//   }
-//   renderLogOut() {
-//     return this.state.logIn ? (
-//       <>
-//         <button onClick={() => this.logout()}>
-//           {translations[this.state.lang].logoutbutton}
-//         </button>
-//       </>
-//     ) : null;
-//   }
-//   changeLanguage(event) {
-//     this.setState({
-//       lang: event.target.value
-//     });
-//   }
-//   chengeMessage(event) {
-//     this.setState({
-//       message: event.target.value
-//     });
-//   }
-//   chengePassword(event) {
-//     this.setState({
-//       password: event.target.value
-//     });
-//   }
-//   chengeNick(event) {
-//     this.setState({
-//       nick: event.target.value
-//     });
-//   }
-//   render() {
-//     return (
-//       <div className="center">
-//         <select
-//           onChange={(event) => this.changeLanguage(event)}
-//           value={this.state.lang}
-//         >
-//           <option value="ru">Руский</option>
-//           <option value="ua">Українська</option>
-//           <option value="en">English</option>
-//         </select>
-//         {this.renderLogOut()}
-//         <h1>{translations[this.state.lang].header}</h1>
-//         {this.state.logIn ? (
-//           <>
-//             {" "}
-//             <h3>
-//               {translations[this.state.lang].welcome}, {this.state.user}!
-//             </h3>
-//             <form onSubmit={(event) => this.sendMassage(event)}>
-//               <textarea
-//                 value={this.state.message}
-//                 onChange={(event) => this.chengeMessage(event)}
-//                 placeholder={translations[this.state.lang].messagePlaceholder}
-//               ></textarea>
-//               <button type="submit">
-//                 {translations[this.state.lang].submitButton}
-//               </button>
-//             </form>
-//             <div className="chat">
-//               {this.state.chat.map((item) => (
-//                 <Message
-//                   key={item.id}
-//                   name={item.name}
-//                   message={item.message}
-//                 />
-//               ))}
-//             </div>
-//           </>
-//         ) : (
-//           <>
-//             <input
-//               value={this.state.nick}
-//               type="nick"
-//               onChange={(event) => this.chengeNick(event)}
-//               placeholder={translations[this.state.lang].nickPlaceholder}
-//             ></input>
-//             <input
-//               value={this.state.password}
-//               type="password"
-//               onChange={(event) => this.chengePassword(event)}
-//               placeholder={translations[this.state.lang].passwordPlaceholder}
-//             ></input>
-//             <button onClick={() => this.checkLogIn()}>
-//               {translations[this.state.lang].logInButton}
-//             </button>
-//             {this.state.error && (
-//               <p className="error">Возникла ошибка с ником или паролем</p>
-//             )}
-//           </>
-//         )}
-//         {/* <p>{translations[this.state.lang].desc}</p> */}
-//       </div>
-//     );
-//   }
-// }
