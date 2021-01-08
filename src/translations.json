@@ -10,7 +10,11 @@
     "welcome": "Welcome",
     "logoutbutton": "logout",
     "logInError": "Вы ввели не правельный пароль или вы не зарегестрированы на этом сайте, если хотите зарегестрироватся отправте сообщение на мою почту - terentismark2007@gmail.com",
-    "signUp": "SignUp"
+    "signUp": "SignUp",
+    "adduser": "Add User",
+    "isadmin": "Admin",
+    "create": "create",
+    "your": "You"
   },
   "ru": {
     "nickPlaceholder": "Никнейм",
@@ -23,7 +27,11 @@
     "welcome": "Приветствуем",
     "logoutbutton": "выйти",
     "logInError": "Вы ввели не правельный пароль или вы не зарегестрированы на этом сайте, если хотите зарегестрироватся отправте сообщение на мою почту - terentismark2007@gmail.com",
-    "signUp": "SignUp"
+    "signUp": "Зарегестрироватся",
+    "adduser": "Добавить Пользователя",
+    "isadmin": "Админ",
+    "create": "создать",
+    "your": "Ты"
   },
   "ua": {
     "nickPlaceholder": "Нікнейм",
@@ -36,6 +44,10 @@
     "welcome": "Вітаємо",
     "logoutbutton": "вийти",
     "logInError": "Вы ввели не правельный пароль или вы не зарегестрированы на этом сайте, если хотите зарегестрироватся отправте сообщение на мою почту - terentismark2007@gmail.com",
-    "signUp": "SignUp"
+    "signUp": "Зареєструватися",
+    "adduser": "Додати користувача",
+    "isadmin": "Адмін",
+    "create": "створити",
+    "your": "Ти"
   }
 }

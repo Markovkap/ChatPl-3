@@ -104,23 +104,38 @@ export default function Chat(props) {
         if (response.data.success) {
           const isAdmin = response.data.user.isAdmin;
           const username = response.data.user.username;
-          console.log(response.data);
-          setToken(response.data.token);
-          setChatId(response.data.user.chats[0]._id);
+          const token = response.data.token;
 
-          getAndSetMessages(
-            response.data.user.chats[0]._id,
-            response.data.token,
-            (response, username, isAdmin) => {
-              setIsError(false);
-              setIsLogged(true);
-              setUser(username);
-              setPassword("");
-              setIsAdmin(isAdmin);
-              setChat(transformMessages(response.data.chat.messages));
-            },
-            [username, isAdmin]
-          );
+          console.log(response.data);
+
+          setToken(token);
+
+          API.get("chats/my", {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+            .then((response) => {
+              if (response.data.success) {
+                const chaid = response.data.chats[0]._id;
+                setChatId(chaid);
+
+                getAndSetMessages(
+                  chaid,
+                  token,
+                  (response, username, isAdmin) => {
+                    setIsError(false);
+                    setIsLogged(true);
+                    setUser(username);
+                    setPassword("");
+                    setIsAdmin(isAdmin);
+                    setChat(transformMessages(response.data.chat.messages));
+                  },
+                  [username, isAdmin]
+                );
+              } else {
+                setIsError(true);
+              }
+            })
+            .catch((error) => console.log(error));
         } else {
           setIsError(true);
         }
@@ -256,6 +271,7 @@ function ChatBlock(props) {
             name={item.name}
             username={props.userNickname}
             message={item.message}
+            lang={props.lang}
           />
         ))}
       </div>
@@ -327,7 +343,7 @@ function AddUser(props) {
   return (
     <>
       <hr />
-      <h2>AddUser</h2>
+      <h2>{translations[props.lang].adduser}</h2>
       <form onSubmit={(event) => props.createUser(event, props.setIsSignUp)}>
         <div>
           <input
@@ -347,11 +363,11 @@ function AddUser(props) {
           <label>
             {" "}
             <input name="isAdmin" type="checkbox" />
-            Admin
+            {translations[props.lang].isadmin}
           </label>
         </div>
         <div>
-          <button type="submit">create</button>
+          <button type="submit">{translations[props.lang].create}</button>
         </div>
       </form>
       <hr />
@@ -362,7 +378,10 @@ function AddUser(props) {
 function Message(props) {
   return (
     <p>
-      {props.username === props.name ? "you" : props.name}: {props.message}
+      {props.username === props.name
+        ? translations[props.lang].your
+        : props.name}
+      : {props.message}
     </p>
   );
 }
