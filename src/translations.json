@@ -14,7 +14,10 @@
     "adduser": "Add User",
     "isadmin": "Admin",
     "create": "create",
-    "your": "You"
+    "your": "You",
+    "UCAATC": "User created and added to chat",
+    "UDATCBHIC": "User doesn't added to chat, but he is created",
+    "UDC": "User doesn't created"
   },
   "ru": {
     "nickPlaceholder": "Никнейм",
@@ -31,7 +34,10 @@
     "adduser": "Добавить Пользователя",
     "isadmin": "Админ",
     "create": "создать",
-    "your": "Ты"
+    "your": "Ты",
+    "UCAATC": "Юзер создан и добавлен в чат",
+    "UDATCBHIC": "Юзер создан, но не добавлен в чат",
+    "UDC": "Юзер не создан"
   },
   "ua": {
     "nickPlaceholder": "Нікнейм",
@@ -48,6 +54,9 @@
     "adduser": "Додати користувача",
     "isadmin": "Адмін",
     "create": "створити",
-    "your": "Ти"
+    "your": "Ти",
+    "UCAATC": "Юзера створено та додано до чату",
+    "UDATCBHIC": "Юзера створено, але не додано до чату",
+    "UDC": "Юзера не створено"
   }
 }

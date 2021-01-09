@@ -215,6 +215,7 @@ export default function Chat(props) {
           <AddUser
             setIsSignUp={setIsSignUp}
             lang={lang}
+            token={token}
             createUser={createUser}
             chatId={chatId}
           />
@@ -329,7 +330,7 @@ function SelectLanguage(props) {
   );
 }
 
-function createUser(event, chatId, setIsSignUp) {
+function createUser(event, chatId, token, lang, setIsSignUp) {
   event.preventDefault(event);
 
   const fields = event.target.querySelectorAll("input");
@@ -350,24 +351,29 @@ function createUser(event, chatId, setIsSignUp) {
     .then((response) => {
       button.disabled = false;
       if (response.data.success) {
-        //сделать переводы для всех текстов которые показываются на сайте
-        API.get(`chats/${chatId}/join/${response.data.user._id}`)
+        API.get(`chats/${chatId}/join/${response.data.user._id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
           .then((response) => {
             if (response.data.success) {
-              alert("User created and added to chat");
+              alert(translations[lang].UCAATC);
             } else {
-              alert("User doesn't added to chat, but he is created");
+              alert(translations[lang].UDATCBHIC);
             }
           })
-          .catch((error) => console.log(error));
+          .catch((error) => {
+            console.log(error);
+            alert(translations[lang].UDATCBHIC);
+          });
       } else {
-        alert("User doesn't created");
+        alert(translations[lang].UDC);
       }
       setIsSignUp(false);
     })
     .catch((error) => {
       button.disabled = true;
       console.log(error);
+      alert(translations[lang].UDC);
     });
 }
 
@@ -378,7 +384,13 @@ function AddUser(props) {
       <h2>{translations[props.lang].adduser}</h2>
       <form
         onSubmit={(event) =>
-          props.createUser(event, props.chatId, props.setIsSignUp)
+          props.createUser(
+            event,
+            props.chatId,
+            props.token,
+            props.lang,
+            props.setIsSignUp
+          )
         }
       >
         <div>
