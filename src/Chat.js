@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import SocketIOClient from "socket.io-client";
 import axios from "axios";
 import "./styles.css";
 import * as translations from "./translations.json";
@@ -8,6 +9,7 @@ const API = axios.create({
   baseURL: "https://665gz.sse.codesandbox.io/v1/",
   timeout: 10000
 });
+const SOCKET_URL = "wss://665gz.sse.codesandbox.io/";
 
 // const urlRegexp = /(([a-z]+:\/\/)?(([a-z0-9\-]+\.)+([a-z]{2}|aero|arpa|biz|com|coop|edu|gov|info|int|jobs|mil|museum|name|nato|net|org|pro|travel|local|internal))(:[0-9]{1,5})?(\/[a-z0-9_\-\.~]+)*(\/([a-z0-9_\-\.]*)(\?[a-z0-9+_\-\.%=&amp;]*)?)?(#[a-zA-Z0-9!$&'()*+.=-_~:@/?]*)?)(\s+|$)/gi.replace(
 //   urlRegexp,
@@ -29,12 +31,30 @@ export default function Chat(props) {
   const [token, setToken] = useState(null);
   const [chatId, setChatId] = useState(null);
   const [isLockButtons, setIsLockButtons] = useState(false);
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
     if (isNeedToClear) {
       clearMessage();
     }
   }, [isNeedToClear]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on("connect", () => {
+        console.log("conection success");
+      });
+      socket.on("error", () => {
+        console.log("conection isn't success");
+      });
+      socket.on("connct_error", () => {
+        console.log("conection error");
+      });
+      socket.on("new-message", ({ chatId, content }) => {
+        console.log(chatId, content);
+      });
+    }
+  }, [socket]);
 
   const sendMessage = (event) => {
     event.preventDefault();
@@ -44,6 +64,17 @@ export default function Chat(props) {
     }
 
     setIsLockButtons(true);
+
+    socket.emit(
+      "send-message",
+      {
+        chatId,
+        content: "test"
+      },
+      ({ chatId, content }) => {
+        console.log(chatId, content);
+      }
+    );
 
     API.post(
       "chats/" + chatId,
@@ -140,6 +171,14 @@ export default function Chat(props) {
                     setChat(transformMessages(response.data.chat.messages));
                   },
                   [username, isAdmin]
+                );
+
+                setSocket(
+                  SocketIOClient(SOCKET_URL, {
+                    query: {
+                      token
+                    }
+                  })
                 );
               } else {
                 setIsError(true);
