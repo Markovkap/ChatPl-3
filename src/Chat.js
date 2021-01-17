@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import SocketIOClient from "socket.io-client";
+import socketIOClient from "socket.io-client";
 import axios from "axios";
 import "./styles.css";
 import * as translations from "./translations.json";
@@ -41,15 +41,18 @@ export default function Chat(props) {
 
   useEffect(() => {
     if (socket) {
-      socket.on("connect", () => {
-        console.log("conection success");
-      });
-      socket.on("error", () => {
-        console.log("conection isn't success");
-      });
-      socket.on("connct_error", () => {
-        console.log("conection error");
-      });
+      localStorage.debug = "*";
+      console.log("debug activated");
+      console.log(socket);
+      // socket.on("connect", () => {
+      //   console.log("conection success");
+      // });
+      // socket.on("error", () => {
+      //   console.log("conection isn't success");
+      // });
+      // socket.on("connct_error", () => {
+      //   console.log("conection error");
+      // });
       socket.on("new-message", ({ chatId, content }) => {
         console.log(chatId, content);
       });
@@ -64,6 +67,8 @@ export default function Chat(props) {
     }
 
     setIsLockButtons(true);
+
+    console.log(chatId, socket);
 
     socket.emit(
       "send-message",
@@ -150,6 +155,7 @@ export default function Chat(props) {
           console.log(response.data);
 
           setToken(token);
+          console.log(token);
 
           API.get("chats/my", {
             headers: { Authorization: `Bearer ${token}` }
@@ -172,14 +178,13 @@ export default function Chat(props) {
                   },
                   [username, isAdmin]
                 );
-
-                setSocket(
-                  SocketIOClient(SOCKET_URL, {
-                    query: {
-                      token
-                    }
-                  })
-                );
+                const socket = socketIOClient(SOCKET_URL, {
+                  query: {
+                    token
+                  },
+                  transports: ["websocket"]
+                });
+                setSocket(socket);
               } else {
                 setIsError(true);
               }
