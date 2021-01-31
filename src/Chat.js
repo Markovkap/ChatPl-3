@@ -3,7 +3,6 @@ import socketIOClient from "socket.io-client";
 import axios from "axios";
 import "./styles.css";
 import * as translations from "./translations.json";
-// import * as db from "./database.json";
 
 const API = axios.create({
   baseURL: "https://665gz.sse.codesandbox.io/v1/",
@@ -44,17 +43,21 @@ export default function Chat(props) {
       localStorage.debug = "*";
       console.log("debug activated");
       console.log(socket);
-      // socket.on("connect", () => {
-      //   console.log("conection success");
-      // });
-      // socket.on("error", () => {
-      //   console.log("conection isn't success");
-      // });
-      // socket.on("connct_error", () => {
-      //   console.log("conection error");
-      // });
-      socket.on("new-message", ({ chatId, content }) => {
-        console.log(chatId, content);
+      socket.on("connect", () => {
+        console.log("conection success");
+      });
+      socket.on("error", () => {
+        console.log("conection isn't success");
+      });
+      socket.on("connect_error", () => {
+        console.log("conection error");
+      });
+      socket.on("new-message", ({ success, message }) => {
+        if (success) {
+          setChat((prevChat) => [transformMessage(message), ...prevChat]);
+        } else {
+          setIsError(true);
+        }
       });
     }
   }, [socket]);
@@ -74,46 +77,25 @@ export default function Chat(props) {
       "send-message",
       {
         chatId,
-        content: "test"
+        content: message
       },
-      ({ chatId, content }) => {
-        console.log(chatId, content);
-      }
-    );
-
-    API.post(
-      "chats/" + chatId,
-      { data: { content: message } },
-      {
-        headers: { Authorization: `Bearer ${token}` }
-      }
-    )
-      .then((response) => {
-        if (response.data.success) {
-          getAndSetMessages(chatId, token, (response) => {
-            setChat(transformMessages(response.data.chat.messages));
-            setIsNeedToClear(true);
-          });
+      (data) => {
+        if (data.success) {
+          setIsNeedToClear(true);
         } else {
           setIsError(true);
         }
-
         setIsLockButtons(false);
-      })
-      .catch((error) => {
-        console.log(error);
-        setIsLockButtons(false);
-      });
+      }
+    );
   };
+  const transformMessage = (message) => ({
+    id: message._id,
+    name: message.sender.username,
+    message: message.content
+  });
 
-  const transformMessages = (messages) =>
-    messages
-      .map((message) => ({
-        id: message._id,
-        name: message.sender.username,
-        message: message.content
-      }))
-      .reverse();
+  const sortChat = (messages) => messages.map(transformMessage).reverse();
 
   const getAndSetMessages = (chatId, token, callback, args = []) => {
     API.get("chats/" + chatId, {
@@ -162,11 +144,11 @@ export default function Chat(props) {
           })
             .then((response) => {
               if (response.data.success) {
-                const chaid = response.data.chats[0]._id;
-                setChatId(chaid);
+                const chatId = response.data.chats[0]._id;
+                setChatId(chatId);
 
                 getAndSetMessages(
-                  chaid,
+                  chatId,
                   token,
                   (response, username, isAdmin) => {
                     setIsError(false);
@@ -174,7 +156,7 @@ export default function Chat(props) {
                     setUser(username);
                     setPassword("");
                     setIsAdmin(isAdmin);
-                    setChat(transformMessages(response.data.chat.messages));
+                    setChat(sortChat(response.data.chat.messages));
                   },
                   [username, isAdmin]
                 );
@@ -184,6 +166,7 @@ export default function Chat(props) {
                   },
                   transports: ["websocket"]
                 });
+                socket.emit("mount-chat", chatId);
                 setSocket(socket);
               } else {
                 setIsError(true);
